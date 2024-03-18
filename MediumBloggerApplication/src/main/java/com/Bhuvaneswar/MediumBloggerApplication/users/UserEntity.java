@@ -12,7 +12,6 @@ import lombok.*;
 @RequiredArgsConstructor
 @AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@Builder
 public class UserEntity
 {
     @Id
@@ -24,9 +23,9 @@ public class UserEntity
     @NonNull
     private String username;
 
-    @Column(nullable = true)
-    @Nullable
-    private String password;
+//    @Column(nullable = true)
+//    @NonNull
+//    private String password;
 
     @Column(nullable = false)
     @NonNull

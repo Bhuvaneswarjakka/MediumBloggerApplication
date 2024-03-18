@@ -2,24 +2,24 @@ package com.Bhuvaneswar.MediumBloggerApplication.users;
 
 import com.Bhuvaneswar.MediumBloggerApplication.users.dtos.CreateUserRequest;
 import org.apache.catalina.User;
+import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 
 @Service
 public class UserService
 {
     private final UsersRepository usersRepository;
+    private final ModelMapper modelMapper;
 
-    public UserService(UsersRepository usersRepository) {
+    public UserService(UsersRepository usersRepository, ModelMapper modelMapper) {
         this.usersRepository = usersRepository;
+        this.modelMapper = modelMapper;
     }
 
     public UserEntity createUser(CreateUserRequest c)
     {
-        UserEntity newUser = UserEntity.builder()
-                .username(c.getUsername())
-//                .password(c.getPassword()) //TODO: Encrypt password
-                .email(c.getEmail())
-                .build();
+        UserEntity newUser=modelMapper.map(c, UserEntity.class);
+        //TODO: password encrypted
         return usersRepository.save(newUser);
     }
 
