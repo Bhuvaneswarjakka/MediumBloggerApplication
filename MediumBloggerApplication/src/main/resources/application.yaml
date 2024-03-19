@@ -8,3 +8,7 @@ spring:
     hibernate:
       ddl-auto: create # in prod, use update, NOT create
     show-sql: true
+  security:
+    user:
+      name: Bhuvi
+      password: 1234

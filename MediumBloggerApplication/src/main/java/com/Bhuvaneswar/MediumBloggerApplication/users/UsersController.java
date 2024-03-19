@@ -1,5 +1,6 @@
 package com.Bhuvaneswar.MediumBloggerApplication.users;
 
+import com.Bhuvaneswar.MediumBloggerApplication.Security.JWTService;
 import com.Bhuvaneswar.MediumBloggerApplication.users.dtos.CreateUserRequest;
 import com.Bhuvaneswar.MediumBloggerApplication.users.dtos.ErrorResponse;
 import com.Bhuvaneswar.MediumBloggerApplication.users.dtos.LoginUserRequest;
@@ -17,10 +18,12 @@ public class UsersController
 {
     private final UserService userService;
     private final ModelMapper modelMapper;
+    private final JWTService jwtService;
 
-    public UsersController(UserService userService, ModelMapper modelMapper) {
+    public UsersController(UserService userService, ModelMapper modelMapper, JWTService jwtService) {
         this.userService = userService;
         this.modelMapper = modelMapper;
+        this.jwtService = jwtService;
     }
 
     @PostMapping("")
@@ -29,6 +32,7 @@ public class UsersController
         UserEntity savedUser=userService.createUser(request);
         URI savedUserURI= URI.create("/users/" + savedUser.getId());
         var userResponse=modelMapper.map(savedUser, UserResponse.class);
+        userResponse.setToken(jwtService.createJWT(savedUser.getId()));
         return ResponseEntity.created(savedUserURI)
                 .body(userResponse);// request, response
     }
@@ -37,14 +41,16 @@ public class UsersController
     ResponseEntity<UserResponse> userLogin(@RequestBody LoginUserRequest request)
     {
         UserEntity savedUser=userService.loginUser(request.getUsername(), request.getPassword());
-
-        return ResponseEntity.ok(modelMapper.map(savedUser, UserResponse.class));
+        var userResponse=modelMapper.map(savedUser, UserResponse.class);
+        userResponse.setToken(jwtService.createJWT(savedUser.getId()));
+        return ResponseEntity.ok(userResponse);
     }
 
     @ExceptionHandler({
-            UserService.UserNotFoundException.class
+            UserService.UserNotFoundException.class,
+            UserService.InvalidCredentialsException.class
     })
-    ResponseEntity<ErrorResponse> handleUserNotFoundException(Exception e)
+    ResponseEntity<ErrorResponse> handleUserExceptions(Exception e)
     {
         String message;
         HttpStatus status;
@@ -53,6 +59,11 @@ public class UsersController
         {
             message=e.getMessage();
             status=HttpStatus.NOT_FOUND;
+        }
+        else if(e instanceof UserService.InvalidCredentialsException)
+        {
+            message=e.getMessage();
+            status=HttpStatus.UNAUTHORIZED;
         }
         else {
             message="Something went wrong";

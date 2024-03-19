@@ -23,9 +23,9 @@ public class UserEntity
     @NonNull
     private String username;
 
-//    @Column(nullable = true)
-//    @NonNull
-//    private String password;
+    @Column(nullable = true)
+    @NonNull
+    private String password;
 
     @Column(nullable = false)
     @NonNull

@@ -3,6 +3,7 @@ package com.Bhuvaneswar.MediumBloggerApplication.users;
 import com.Bhuvaneswar.MediumBloggerApplication.users.dtos.CreateUserRequest;
 import org.apache.catalina.User;
 import org.modelmapper.ModelMapper;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -10,16 +11,18 @@ public class UserService
 {
     private final UsersRepository usersRepository;
     private final ModelMapper modelMapper;
+    private final PasswordEncoder passwordEncoder;
 
-    public UserService(UsersRepository usersRepository, ModelMapper modelMapper) {
+    public UserService(UsersRepository usersRepository, ModelMapper modelMapper, PasswordEncoder passwordEncoder) {
         this.usersRepository = usersRepository;
         this.modelMapper = modelMapper;
+        this.passwordEncoder = passwordEncoder;
     }
 
     public UserEntity createUser(CreateUserRequest c)
     {
         UserEntity newUser=modelMapper.map(c, UserEntity.class);
-        //TODO: password encrypted
+        newUser.setPassword(passwordEncoder.encode(c.getPassword()));
         return usersRepository.save(newUser);
     }
 
@@ -36,7 +39,11 @@ public class UserService
     public UserEntity loginUser(String username, String password)
     {
         var user=usersRepository.findByUsername(username).orElseThrow(()-> new UserNotFoundException(username));
-        //TODO: match password
+        var passwordmatcher=passwordEncoder.matches(password, user.getPassword());
+        if(!passwordmatcher)
+        {
+            throw new InvalidCredentialsException();
+        }
         return user;
     }
 
@@ -49,4 +56,12 @@ public class UserService
             super("User with id: " + userId + " not found");
         }
     }
+
+    public static class InvalidCredentialsException extends IllegalArgumentException
+    {
+        public InvalidCredentialsException() {
+            super("Invalid username and password combination");
+        }
+    }
+
 }

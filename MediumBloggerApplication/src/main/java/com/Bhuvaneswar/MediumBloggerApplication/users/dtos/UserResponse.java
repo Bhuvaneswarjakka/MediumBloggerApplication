@@ -7,7 +7,9 @@ public class UserResponse
 {
     private Long id;
     private String username;
+//    private String password;//TODO: Remove
     private String email;
     private String bio;
     private String image;
+    private String token;
 }
